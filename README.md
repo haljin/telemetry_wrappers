@@ -1,4 +1,5 @@
 # TelemetryWrappers
+![Hex.pm](https://img.shields.io/hexpm/v/telemetry_wrappers.svg)
 
 Simple wrapper functions for Telemetry to make taking some metrics a bit easier.
 
