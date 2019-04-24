@@ -48,7 +48,8 @@ defmodule TelemetryWrappers do
       end
   """
   defmacro deftimed(function_name, metric_name \\ [], do: expr) do
-    actual_name = get_actual_name(metric_name)
+    {fname, _, _} = function_name
+    actual_name = get_actual_name(metric_name, fname)
 
     quote do
       def unquote(function_name) do
@@ -90,7 +91,8 @@ defmodule TelemetryWrappers do
   """
 
   defmacro deftimedp(function_name, metric_name \\ [], do: expr) do
-    actual_name = get_actual_name(metric_name)
+    {fname, _, _} = function_name
+    actual_name = get_actual_name(metric_name, fname)
 
     quote do
       defp unquote(function_name) do
@@ -101,10 +103,6 @@ defmodule TelemetryWrappers do
     end
   end
 
-  defp get_actual_name([]) do
-    {name, _arity} = __ENV__.function
-    [:timing, name]
-  end
-
-  defp get_actual_name(metric), do: metric
+  defp get_actual_name([], name), do: [:timing, name]
+  defp get_actual_name(metric, _), do: metric
 end

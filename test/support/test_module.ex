@@ -14,5 +14,5 @@ defmodule TelemetryWrappers.Support.TestModule do
     private_fun(a)
   end
 
-  deftimedp(private_fun(a), [:something], do: a)
+  deftimedp private_fun(a), [:something], do: a
 end

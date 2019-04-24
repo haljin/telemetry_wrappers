@@ -26,8 +26,8 @@ defmodule TelemetryWrappers.MixProject do
     [
       {:telemetry, "~> 0.4.0"},
       {:credo, "~> 1.0", only: [:dev, :test]},
-      {:telemetry_metrics, "~> 0.2.1", only: [:test]},
-      {:ex_doc, "~> 0.20.2", only: [:dev, :test]}
+      {:ex_doc, "~> 0.20.2", only: [:dev, :test]},
+      {:telemetry_poller, "~> 0.3.0", only: [:test]}
     ]
   end
 
