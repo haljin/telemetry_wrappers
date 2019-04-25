@@ -1,5 +1,6 @@
 # TelemetryWrappers
 ![Hex.pm](https://img.shields.io/hexpm/v/telemetry_wrappers.svg)
+[![Build Status](https://travis-ci.org/haljin/telemetry_wrappers.svg?branch=master)](https://travis-ci.org/haljin/telemetry_wrappers)
 
 Simple wrapper functions for Telemetry to make taking some metrics a bit easier.
 
