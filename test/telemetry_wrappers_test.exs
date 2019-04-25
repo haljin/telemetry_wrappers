@@ -12,6 +12,9 @@ defmodule TelemetryWrappersTest do
     deftimedp my_priv_fun(a), [:some, :metric], do: a
 
     deftimed my_fun_with_default(a), do: a
+
+    deftimed multi_clause(:a), [:some, :metric], do: :ok
+    deftimed multi_clause(:b), [:some, :metric], do: :bad
   end
 
   defmodule DummyHandler do
@@ -44,5 +47,12 @@ defmodule TelemetryWrappersTest do
 
     assert 6 == TestModule.my_fun_with_default(6)
     assert_received {:my_fun_with_default, %{call: _}}
+  end
+
+  test "Multi-clause timed function" do
+    assert :ok == TestModule.multi_clause(:a)
+    assert_receive %{call: _}
+    assert :bad == TestModule.multi_clause(:b)
+    assert_receive %{call: _}
   end
 end
