@@ -5,7 +5,7 @@ defmodule TelemetryWrappers do
 
   defmacro __using__(_opts) do
     quote do
-      import TelemetryWrappers, only: [deftimed: 2, deftimed: 3, deftimedp: 2, deftimedp: 3]
+      import TelemetryWrappers, only: [deftimed: 2, deftimed: 3, deftimed: 4, deftimedp: 2, deftimedp: 3, deftimedp: 4]
       require TelemetryWrappers
     end
   end
@@ -61,6 +61,45 @@ defmodule TelemetryWrappers do
   end
 
   @doc """
+  Defines a function that will have its execution time measured and sent as a telemetry event.
+  Also adds metadata to the metric.
+
+  As an example you can define the following module
+
+    defmodule TelemetryWrappers.Support.TestModule do
+      use TelemetryWrappers
+
+      deftimed timed_function_with_meta(a, b), [:a, :b], %{a: a} do
+        a + b
+      end
+    end
+
+  This will emit a `:telemetry` event `[:a, :b]` with the contents `%{call: timing}` and the metadata '%{a: a}'
+  where `timing` is the time the function took to execute in microseconds.
+
+  Note that type specs can still be defined for function defined with `deftimed` just as you would normally, e.g.
+
+      @spec timed_function(number(), number()) :: number()
+      deftimed timed_function_with_meta(a, b), [:a, :b], %{a: a} do
+        a + b
+      end
+  """
+  defmacro deftimed(function_name, metric_name, metadata, do: expr) do
+    {fname, _, _} = function_name
+    actual_name = get_actual_name(metric_name, fname)
+
+    quote do
+      def unquote(function_name) do
+        {timing, result} = :timer.tc(fn -> unquote(expr) end)
+        :telemetry.execute(unquote(actual_name), %{call: timing}, unquote(metadata))
+        result
+      end
+    end
+  end
+
+
+
+  @doc """
   Defines a private function that will have its execution time measured and sent as a telemetry event.
 
   In principle, same as `deftimed/3` but defines a private function instead.
@@ -98,6 +137,19 @@ defmodule TelemetryWrappers do
       defp unquote(function_name) do
         {timing, result} = :timer.tc(fn -> unquote(expr) end)
         :telemetry.execute(unquote(actual_name), %{call: timing})
+        result
+      end
+    end
+  end
+
+  defmacro deftimedp(function_name, metric_name, metadata, do: expr) do
+    {fname, _, _} = function_name
+    actual_name = get_actual_name(metric_name, fname)
+
+    quote do
+      defp unquote(function_name) do
+        {timing, result} = :timer.tc(fn -> unquote(expr) end)
+        :telemetry.execute(unquote(actual_name), %{call: timing}, unquote(metadata))
         result
       end
     end

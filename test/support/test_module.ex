@@ -10,6 +10,11 @@ defmodule TelemetryWrappers.Support.TestModule do
     a + b
   end
 
+  @spec timed_function_with_meta(number(), number()) :: number()
+  deftimed timed_function_with_meta(a, b), [:a, :b], %{a: a} do
+    a + b
+  end
+
   def invoke_private(a) do
     private_fun(a)
   end
