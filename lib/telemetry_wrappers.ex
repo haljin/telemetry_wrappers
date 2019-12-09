@@ -5,7 +5,7 @@ defmodule TelemetryWrappers do
 
   defmacro __using__(_opts) do
     quote do
-      import TelemetryWrappers, only: [deftimed: 2, deftimed: 3, deftimedp: 2, deftimedp: 3]
+      import TelemetryWrappers, only: [deftimed: 2, deftimed: 3, deftimed: 4, deftimedp: 2, deftimedp: 3, deftimedp: 4]
       require TelemetryWrappers
     end
   end
@@ -46,15 +46,27 @@ defmodule TelemetryWrappers do
       deftimed timed_function(a, b), [:a, :b] do
         a + b
       end
+
+  You can also add metadata to the metrics.
+
+    defmodule TelemetryWrappers.Support.TestModule do
+      use TelemetryWrappers
+
+      deftimed timed_function_with_meta(a, b), [:a, :b], %{a: a} do
+        a + b
+      end
+    end
+
+  This will emit a `:telemetry` event `[:a, :b]` with the contents `%{call: timing}` and the metadata '%{a: a}'
   """
-  defmacro deftimed(function_name, metric_name \\ [], do: expr) do
+  defmacro deftimed(function_name, metric_name \\ [], metadata \\ quote(do: %{}), do: expr) do
     {fname, _, _} = function_name
     actual_name = get_actual_name(metric_name, fname)
 
     quote do
       def unquote(function_name) do
         {timing, result} = :timer.tc(fn -> unquote(expr) end)
-        :telemetry.execute(unquote(actual_name), %{call: timing})
+        :telemetry.execute(unquote(actual_name), %{call: timing}, unquote(metadata))
         result
       end
     end
@@ -89,15 +101,14 @@ defmodule TelemetryWrappers do
    just like in `deftimed/3`
 
   """
-
-  defmacro deftimedp(function_name, metric_name \\ [], do: expr) do
+  defmacro deftimedp(function_name, metric_name \\ [], metadata \\ quote(do: %{}), do: expr) do
     {fname, _, _} = function_name
     actual_name = get_actual_name(metric_name, fname)
 
     quote do
       defp unquote(function_name) do
         {timing, result} = :timer.tc(fn -> unquote(expr) end)
-        :telemetry.execute(unquote(actual_name), %{call: timing})
+        :telemetry.execute(unquote(actual_name), %{call: timing}, unquote(metadata))
         result
       end
     end
