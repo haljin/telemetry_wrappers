@@ -15,15 +15,17 @@ defmodule TelemetryWrappersTest do
 
     deftimed my_fun_with_default(a), do: a
 
-    deftimedp my_priv_fun_with_meta(a), [:some, :metric], %{env: System.get_env("DUMMY")}, do: a
+    deftimedp my_priv_fun_with_meta(a), [:some, :metric], %{env: "Something"}, do: a
 
     deftimed multi_clause(:a), [:some, :metric], do: :ok
     deftimed multi_clause(:b), [:some, :metric], do: :bad
   end
 
   defmodule DummyHandler do
-    def handle([:some, :metric], measurement, _, pid), do: send(pid, measurement)
-    def handle([:timing, fun_name], measurement, _, pid), do: send(pid, {fun_name, measurement})
+    def handle([:some, :metric], measurement, meta, pid), do: send(pid, {measurement, meta})
+
+    def handle([:timing, fun_name], measurement, meta, pid),
+      do: send(pid, {fun_name, {measurement, meta}})
   end
 
   setup do
@@ -33,17 +35,17 @@ defmodule TelemetryWrappersTest do
 
   test "Function call emit events" do
     assert 6 == TestModule.my_fun(6)
-    assert_received %{call: _}
+    assert_received {%{call: _}, %{env: 6}}
   end
 
   test "Private function call emit events" do
     assert 6 == TestModule.wrapper(6)
-    assert_receive %{call: _}
+    assert_receive {%{call: _}, %{}}
   end
 
   test "Private function call emit events with metadata" do
     assert 6 == TestModule.wrapper_with_meta(6)
-    assert_receive %{call: _}
+    assert_receive {%{call: _}, %{env: "Something"}}
   end
 
   test "Function call emit default events" do
@@ -55,13 +57,13 @@ defmodule TelemetryWrappersTest do
     )
 
     assert 6 == TestModule.my_fun_with_default(6)
-    assert_received {:my_fun_with_default, %{call: _}}
+    assert_received {:my_fun_with_default, {%{call: _}, %{}}}
   end
 
   test "Multi-clause timed function" do
     assert :ok == TestModule.multi_clause(:a)
-    assert_receive %{call: _}
+    assert_receive {%{call: _}, %{}}
     assert :bad == TestModule.multi_clause(:b)
-    assert_receive %{call: _}
+    assert_receive {%{call: _}, %{}}
   end
 end
