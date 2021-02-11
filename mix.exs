@@ -4,7 +4,7 @@ defmodule TelemetryWrappers.MixProject do
   def project do
     [
       app: :telemetry_wrappers,
-      version: "0.2.0",
+      version: "1.0.0",
       elixir: "~> 1.8",
       start_permanent: Mix.env() == :prod,
       docs: [extras: ["README.md"], main: "readme"],
@@ -26,8 +26,8 @@ defmodule TelemetryWrappers.MixProject do
     [
       {:telemetry, "~> 0.4.0"},
       {:credo, "~> 1.0", only: [:dev, :test]},
-      {:ex_doc, "~> 0.20.2", only: [:dev, :test]},
-      {:telemetry_poller, "~> 0.3.0", only: [:test]}
+      {:ex_doc, "~> 0.20", only: [:dev, :test]},
+      {:telemetry_poller, "~> 0.5.0", only: [:test]}
     ]
   end
 

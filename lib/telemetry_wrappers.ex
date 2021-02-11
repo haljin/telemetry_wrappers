@@ -5,7 +5,9 @@ defmodule TelemetryWrappers do
 
   defmacro __using__(_opts) do
     quote do
-      import TelemetryWrappers, only: [deftimed: 2, deftimed: 3, deftimed: 4, deftimedp: 2, deftimedp: 3, deftimedp: 4]
+      import TelemetryWrappers,
+        only: [deftimed: 2, deftimed: 3, deftimed: 4, deftimedp: 2, deftimedp: 3, deftimedp: 4]
+
       require TelemetryWrappers
     end
   end
@@ -35,8 +37,8 @@ defmodule TelemetryWrappers do
       iex> TelemetryWrappers.Support.TestModule.timed_function2(1, 2)
       3
 
-  but it will also emit a `:telemetry` event `[:a, :b]` with the contents `%{call: timing}`
-  where `timing` is the time the function took to execute in microseconds.
+  but it will also emit a `:telemetry` event `[:a, :b]` with the measurement `%{call: timing}`
+  where `timing` is the time the function took to execute in microseconds (measured using :timer.tc/1).
 
   The metric name is optional and will default to `[:timing, name]` where `name` is the name of the function (without arity).
 
@@ -66,7 +68,19 @@ defmodule TelemetryWrappers do
     quote do
       def unquote(function_name) do
         {timing, result} = :timer.tc(fn -> unquote(expr) end)
-        :telemetry.execute(unquote(actual_name), %{call: timing}, unquote(metadata))
+
+        :telemetry.execute(
+          unquote(actual_name),
+          %{call: timing},
+          Map.merge(
+            %{
+              module: __MODULE__,
+              function: unquote(fname)
+            },
+            unquote(metadata)
+          )
+        )
+
         result
       end
     end
@@ -94,12 +108,13 @@ defmodule TelemetryWrappers do
       iex> TelemetryWrappers.Support.TestModule.invoke_private(15)
       15
 
-  which will also emit a `:telemetry` event `[:something]` with the contents `%{call: timing}`
-  where `timing` is the time the function took to execute the private function in microseconds.
+  which will also emit a `:telemetry` event `[:something]` with the measurement `%{call: timing}`
+  where `timing` is the time the function took to execute in microseconds (measured using :timer.tc/1).
 
   The metric name is optional and will default to `[:timing, name]` where `name` is the name of the function (without arity),
    just like in `deftimed/3`
 
+  You can also add metadata to private functions.
   """
   defmacro deftimedp(function_name, metric_name \\ [], metadata \\ quote(do: %{}), do: expr) do
     {fname, _, _} = function_name
@@ -108,7 +123,19 @@ defmodule TelemetryWrappers do
     quote do
       defp unquote(function_name) do
         {timing, result} = :timer.tc(fn -> unquote(expr) end)
-        :telemetry.execute(unquote(actual_name), %{call: timing}, unquote(metadata))
+
+        :telemetry.execute(
+          unquote(actual_name),
+          %{call: timing},
+          Map.merge(
+            %{
+              module: __MODULE__,
+              function: unquote(fname)
+            },
+            unquote(metadata)
+          )
+        )
+
         result
       end
     end

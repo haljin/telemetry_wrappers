@@ -35,17 +35,27 @@ defmodule TelemetryWrappersTest do
 
   test "Function call emit events" do
     assert 6 == TestModule.my_fun(6)
-    assert_received {%{call: _}, %{env: 6}}
+
+    assert_received {%{call: _},
+                     %{env: 6, function: :my_fun, module: TelemetryWrappersTest.TestModule}}
   end
 
   test "Private function call emit events" do
     assert 6 == TestModule.wrapper(6)
-    assert_receive {%{call: _}, %{}}
+
+    assert_receive {%{call: _},
+                    %{function: :my_priv_fun, module: TelemetryWrappersTest.TestModule}}
   end
 
   test "Private function call emit events with metadata" do
     assert 6 == TestModule.wrapper_with_meta(6)
-    assert_receive {%{call: _}, %{env: "Something"}}
+
+    assert_receive {%{call: _},
+                    %{
+                      env: "Something",
+                      function: :my_priv_fun_with_meta,
+                      module: TelemetryWrappersTest.TestModule
+                    }}
   end
 
   test "Function call emit default events" do
@@ -57,13 +67,21 @@ defmodule TelemetryWrappersTest do
     )
 
     assert 6 == TestModule.my_fun_with_default(6)
-    assert_received {:my_fun_with_default, {%{call: _}, %{}}}
+
+    assert_received {:my_fun_with_default,
+                     {%{call: _},
+                      %{function: :my_fun_with_default, module: TelemetryWrappersTest.TestModule}}}
   end
 
   test "Multi-clause timed function" do
     assert :ok == TestModule.multi_clause(:a)
-    assert_receive {%{call: _}, %{}}
+
+    assert_receive {%{call: _},
+                    %{function: :multi_clause, module: TelemetryWrappersTest.TestModule}}
+
     assert :bad == TestModule.multi_clause(:b)
-    assert_receive {%{call: _}, %{}}
+
+    assert_receive {%{call: _},
+                    %{function: :multi_clause, module: TelemetryWrappersTest.TestModule}}
   end
 end
